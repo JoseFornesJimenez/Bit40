@@ -8,10 +8,8 @@
 #define SCREEN_HEIGHT 128
 #define IMG_WIDTH     128
 #define IMG_HEIGHT    44
-#define IMG_HEIGHT2    128
 #define POS_X         0
 #define POS_Y         ((SCREEN_HEIGHT - IMG_HEIGHT) / 2)
-#define POS_Y2       0
 #define SCLK_PIN GPIO_NUM_8
 #define MOSI_PIN GPIO_NUM_10
 #define DC_PIN   GPIO_NUM_21
@@ -47,8 +45,9 @@ void copiarDesdePROGMEM(uint16_t* destino, const uint16_t* origen) {
     }
   }
 }
-void copiarDesdePROGMEM1(uint16_t* destino, const uint16_t* origen) {
-  for (int i = 0; i < 128 * 128; i++) {
+
+void copiarDesdePROGMEM1(uint16_t* destino, const uint16_t* origen, int weight = 128, int height = 128) {
+  for (int i = 0; i < weight * height; i++) {
     uint16_t pixel = pgm_read_word(&origen[i]);
 
     // Extrae componentes RGB565
@@ -70,64 +69,57 @@ void copiarDesdePROGMEM1(uint16_t* destino, const uint16_t* origen) {
 }
 
 
+void mostrarFrames(const uint16_t* frames[], int numFrames, int delayMs=10, int posx = 0, int posy = 0, int weigh = 128, int height = 128, int pasador = 1) {
+  for (int i = 0; i < numFrames; i++) {
+    if(pasador == 0 ){copiarDesdePROGMEM(buffer_0, frames[i]);}
+    else{copiarDesdePROGMEM1(buffer_0, frames[i]);}
+    display.drawRGBBitmap(posx, posy, buffer_0, weigh, height);
+    delay(delayMs);
+  }
+}
+
+
 
 void setup() {
+  
+  randomSeed(analogRead(0)); // Usa una lectura analógica como semilla
   display.begin();
   display.fillScreen(SSD1351_BLACK);
-
-  // Copiar imágenes desde PROGMEM a RAM (solo una vez)
-
   copiarDesdePROGMEM1(buffer_0, epd_bitmap_0);
   copiarDesdePROGMEM(buffer_abiertos, Ojos_abiertos);
   copiarDesdePROGMEM(buffer_cerrados, Ojos_cerrados);
-  display.fillScreen(SSD1351_BLACK);
-
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_1);
-  delay(10);
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_0);
-  delay(20);
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_1);
-  delay(10);
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_0);
-  delay(20);
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_3);
-  delay(10);
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_5);
-  delay(10);
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_7);
-  delay(10);
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  copiarDesdePROGMEM1(buffer_0, epd_bitmap_9);
-  delay(10);
-
-  display.drawRGBBitmap(0, 0, buffer_0, 128, 128);
-  delay(10);
+  //las secuencias estan en inicio.h
+  mostrarFrames(secuencia, sizeof(secuencia) / sizeof(secuencia[0]), 10);
 }
 
 void loop() {
-  
-  for (int i = 0; i < 7; i++) {
-    
-    display.drawRGBBitmap(POS_X, POS_Y, buffer_abiertos, IMG_WIDTH, IMG_HEIGHT );
-    delay(10);
+  int animacion = random(0, 6);
+  const uint16_t* ojos1[] = {
+    Ojos_abiertos,
+  };
+  // Mostrar ojos en la posición original
+  mostrarFrames(ojos, sizeof(ojos) / sizeof(ojos[0]), 5, POS_X, POS_Y, IMG_WIDTH, IMG_HEIGHT, 0);
+  if(animacion == 2){
+    for(int i = 0; i < 10; i+=2){
+      mostrarFrames(ojos1, sizeof(ojos1) / sizeof(ojos1[0]), 5, POS_X+i, POS_Y+i, IMG_WIDTH, IMG_HEIGHT, 0);
+    }
+    for(int i = 10; i > 0; i-=2){
+      mostrarFrames(ojos1, sizeof(ojos1) / sizeof(ojos1[0]), 5, POS_X+i, POS_Y+i, IMG_WIDTH, IMG_HEIGHT, 0);
+    }
+    for(int i = 0; i < 10; i+=2){
+      mostrarFrames(ojos1, sizeof(ojos1) / sizeof(ojos1[0]), 5, POS_X-i, POS_Y-i, IMG_WIDTH, IMG_HEIGHT, 0);
+    }
+    for(int i = 10; i > 0; i-=2){
+      mostrarFrames(ojos1, sizeof(ojos1) / sizeof(ojos1[0]), 5, POS_X-i, POS_Y-i, IMG_WIDTH, IMG_HEIGHT, 0);
+    }
   }
 
-  for (int i = 0; i < 1; i++) {
-    display.drawRGBBitmap(POS_X, POS_Y, buffer_cerrados, IMG_WIDTH, IMG_HEIGHT);
-    delay(10);
-  }
+  // // Limpiar esa zona
+  // display.fillRect(POS_X, POS_Y, IMG_WIDTH, IMG_HEIGHT, SSD1351_BLACK);
+
+  // // Mostrar ojos en la posición desplazada
+  // mostrarFrames(ojos, sizeof(ojos) / sizeof(ojos[0]), 5, POS_X, POS_Y + 10, IMG_WIDTH, IMG_HEIGHT, 0);
+  // // Limpiar esa zona también
+  // display.fillRect(POS_X, POS_Y + 10, IMG_WIDTH, IMG_HEIGHT, SSD1351_BLACK);
 }
+
