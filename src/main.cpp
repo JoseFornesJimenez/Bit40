@@ -12,19 +12,26 @@
 #include "gifs/normal.h"
 #include "gifs/mareado.h"
 
+// Primero inicializa el TFT
 TFT_eSPI tft = TFT_eSPI();
+
+// Luego incluye el OTA (usa `tft`)
+#include "ota_web.h"
+
 AnimatedGIF gif;
 GIFManager gifManager(&tft, &gif);
 MPU6050 mpu;
 
+// Lista de GIFs
 GIFEntry gifList[] = {
   { guino, sizeof(guino) },         // 0
   { estrella, sizeof(estrella) },   // 1
   { normal, sizeof(normal) },       // 2
-  { incio, sizeof(incio) },          // 3 -> inicio
-  { mareado, sizeof(mareado) }          // 4 -> mareado
+  { incio, sizeof(incio) },         // 3 -> inicio
+  { mareado, sizeof(mareado) }      // 4 -> mareado
 };
 
+// Índices legibles
 enum GifIndex {
   GUINO = 0,
   MAREADO = 4,
@@ -34,20 +41,28 @@ enum GifIndex {
 
 void setup() {
   Serial.begin(115200);
-  Wire.begin();          // SDA=21, SCL=22 por defecto
+
+  // ✅ Inicializa TFT antes de usarlo en setupOTA()
+  tft.begin();
+  tft.setRotation(0);
+  tft.fillScreen(TFT_BLACK);
+
+  // ✅ Intenta conectar a WiFi y mostrar IP o error
+  setupOTA();
+
+  // Inicializa I2C y MPU6050
+  Wire.begin();
   mpu.initialize();
 
   if (!mpu.testConnection()) {
     Serial.println("MPU6050 no conectado");
-    while (true);
+    while (true);  // Se queda aquí si falla
   }
 
-  tft.begin();
-  tft.setRotation(0);
-  tft.fillScreen(TFT_BLACK);
+  // Inicializa GIFs
   gif.begin(BIG_ENDIAN_PIXELS);
 
-  // Mostrar animación de inicio
+  // Muestra animación de inicio
   gifManager.setGIF(gifList[INICIO]);
   gifManager.play();
 }
@@ -69,9 +84,21 @@ void loop() {
       Serial.println("¡Sacudida detectada!");
       gifManager.setGIF(gifList[MAREADO]);
       gifManager.play();
+      gifManager.setGIF(gifList[MAREADO]);
+      gifManager.play();
+      gifManager.setGIF(gifList[MAREADO]);
+      gifManager.play();
     } else {
+      int num = random(0, 4);
       gifManager.setGIF(gifList[NORMAL]);
       gifManager.play();
+      if(num >= 0 && num <= 1){
+        gifManager.setGIF(gifList[num]);
+        gifManager.play();
+      }
     }
   }
+
+  // ✅ Necesario para que funcione la web OTA
+  server.handleClient();
 }
