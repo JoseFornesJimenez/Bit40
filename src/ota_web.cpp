@@ -3,11 +3,11 @@
 #include "gif_manager.h" // Necesario para usar la imagen de fondo
 
 const char* default_ssid = "REINACASA";
-const char* default_password = "Elpatiodemicasa34";
+const char* default_password = "1234";
 
 WebServer server(80);
 Preferences preferences;
-DNSServer dnsServer;
+
 String scannedNetworks = "";
 bool scanInProgress = false;
 bool playSelectedGIF = false;
@@ -214,6 +214,32 @@ void setupOTA() {
           </select>
           <input type='submit' value='Mostrar GIF'>
         </form>
+        <div class="info-box">
+          <h2>Información del dispositivo</h2>
+          <p><strong>Versión firmware:</strong> 1.0.0</p>
+          <p><strong>IP actual:</strong> %IP%</p>
+          <p><strong>Uptime:</strong> %UPTIME%</p>
+        </div>
+        <style>
+          .info-box {
+            margin: 20px auto;
+            padding: 20px;
+            background: #333;
+            color: #0f0;
+            width: 90%;
+            max-width: 400px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px #0f0;
+            font-size: 16px;
+          }
+
+          @media (max-width: 600px) {
+            .info-box {
+              font-size: 14px;
+            }
+          }
+        </style>
+
         <p id="gifResponse" style="color:#0f0;"></p>
 
         <script>
