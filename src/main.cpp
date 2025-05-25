@@ -13,6 +13,8 @@
 #include "gifs/mareado.h"
 #include "gifs/corazones.h"
 #include <gifs/movimiento1.h>
+#include <gifs/muerto.h>
+#include <gifs/baba.h>
 // Primero inicializa el TFT
 TFT_eSPI tft = TFT_eSPI();
 int num = 0;
@@ -31,8 +33,11 @@ GIFEntry gifList[] = {
   { incio, sizeof(incio) },         // 3 -> inicio
   { mareado, sizeof(mareado) },
   { corazones, sizeof(corazones) },
-  { movimiento1 ,sizeof(movimiento1) }      // 4 -> mareado
+  { movimiento1 ,sizeof(movimiento1) },
+  { muerto ,sizeof(muerto) },
+  { baba ,sizeof(baba) }
 };
+
 
 // Índices legibles
 enum GifIndex {
@@ -42,9 +47,10 @@ enum GifIndex {
   INICIO = 3,
   CORAZONES = 5,
   MOVIMIENTO1 = 6,
-  ESTRELLA = 1
+  ESTRELLA = 1,
+  BABA = 8
 };
-int aleatorio[] = {0, 1, 5, 6};
+int aleatorio[] = {0, 1, 5, 6, 8};
 
 void setup() {
   Serial.begin(115200);
@@ -75,6 +81,9 @@ void setup() {
 }
 
 void loop() {
+  dnsServer.processNextRequest();  // ⚠️ necesario para que funcione el portal cautivo
+  server.handleClient();           // ya lo usas si tienes animaciones
+  handleSelectedGIF();
   static unsigned long lastCheck = 0;
   const unsigned long checkInterval = 300;  // ms
   const float threshold = 1.2;              // Umbral de sacudida en g
@@ -96,7 +105,7 @@ void loop() {
       gifManager.play();
     } else {
 
-      num = random(0, 5);
+      num = random(0, 6);
       
       gifManager.setGIF(gifList[NORMAL]);
       gifManager.play();

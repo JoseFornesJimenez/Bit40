@@ -4,7 +4,10 @@
 #include <Update.h>
 #include <Preferences.h>
 #include <TFT_eSPI.h>
+#include <DNSServer.h>
+#define MUERTO 7
 
+extern DNSServer dnsServer;
 extern TFT_eSPI tft;
 extern WebServer server;
 extern Preferences preferences;
@@ -17,3 +20,4 @@ bool loadWiFiConfig(String& ssid, String& password);
 void clearWiFiConfig();
 void drawWiFiStatusIcon();
 void setupOTA();
+void handleSelectedGIF();
