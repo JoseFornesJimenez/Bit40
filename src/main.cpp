@@ -15,6 +15,7 @@
 #include <gifs/movimiento1.h>
 #include <gifs/muerto.h>
 #include <gifs/baba.h>
+//PRueba
 // Primero inicializa el TFT
 TFT_eSPI tft = TFT_eSPI();
 int num = 0;
