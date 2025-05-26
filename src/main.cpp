@@ -24,7 +24,6 @@ int num = 0;
 AnimatedGIF gif;
 GIFManager gifManager(&tft, &gif);
 MPU6050 mpu;
-
 // Lista de GIFs
 GIFEntry gifList[] = {
   { guino, sizeof(guino) },         // 0
@@ -104,9 +103,7 @@ void loop() {
       gifManager.setGIF(gifList[MAREADO]);
       gifManager.play();
     } else {
-
-      num = random(0, 6);
-      
+      num = random(0, 5);  // corregido: solo valores 0 a 4
       gifManager.setGIF(gifList[NORMAL]);
       gifManager.play();
       gifManager.setGIF(gifList[aleatorio[num]]);

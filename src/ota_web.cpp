@@ -7,7 +7,7 @@ const char* default_password = "1234";
 
 WebServer server(80);
 Preferences preferences;
-
+DNSServer dnsServer;
 String scannedNetworks = "";
 bool scanInProgress = false;
 bool playSelectedGIF = false;
@@ -296,7 +296,7 @@ void setupOTA() {
   }, []() {
     HTTPUpload& upload = server.upload();
     if (upload.status == UPLOAD_FILE_START) {
-      gifManager.setGIF(gifList[MUERTO]);  // Fondo inicial
+      gifManager.setGIF(gifList[7]);  // Fondo inicial
       gifManager.play();
 
       Update.onProgress([](size_t progress, size_t total) {

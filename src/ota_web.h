@@ -5,7 +5,6 @@
 #include <Preferences.h>
 #include <TFT_eSPI.h>
 #include <DNSServer.h>
-#define MUERTO 7
 
 extern DNSServer dnsServer;
 extern TFT_eSPI tft;
