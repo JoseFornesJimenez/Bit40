@@ -24,7 +24,6 @@ int num = 0;
 AnimatedGIF gif;
 GIFManager gifManager(&tft, &gif);
 MPU6050 mpu;
-
 // Lista de GIFs
 GIFEntry gifList[] = {
   { guino, sizeof(guino) },         // 0
@@ -117,6 +116,7 @@ void loop() {
       Serial.println("Detectado: DE LADO → MAREADO");
       selected = MAREADO;
     } else {
+<<<<<<< HEAD
       if (a > shakeThreshold) {
         Serial.println("¡Sacudida detectada!");
         selected = MAREADO;
@@ -132,6 +132,12 @@ void loop() {
 
     if (selected != -1 && selected != lastGifShown) {
       gifManager.setGIF(gifList[selected]);
+=======
+      num = random(0, 5);  // corregido: solo valores 0 a 4
+      gifManager.setGIF(gifList[NORMAL]);
+      gifManager.play();
+      gifManager.setGIF(gifList[aleatorio[num]]);
+>>>>>>> 2d9a3456670c14b82181614ff0609a71353d9f62
       gifManager.play();
       lastGifShown = selected;
     }

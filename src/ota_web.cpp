@@ -9,7 +9,10 @@ const char* default_password = "Elpatiodemicasa34";
 WebServer server(80);
 Preferences preferences;
 DNSServer dnsServer;
+<<<<<<< HEAD
 
+=======
+>>>>>>> 2d9a3456670c14b82181614ff0609a71353d9f62
 String scannedNetworks = "";
 bool scanInProgress = false;
 bool playSelectedGIF = false;
