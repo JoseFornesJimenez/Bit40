@@ -1,12 +1,14 @@
 #include "ota_web.h"
 #include "../include/gifs/wifi.h"
 #include "gif_manager.h" // Necesario para usar la imagen de fondo
+#include <DNSServer.h>
 
 const char* default_ssid = "REINACASA";
-const char* default_password = "1234";
+const char* default_password = "Elpatiodemicasa34";
 
 WebServer server(80);
 Preferences preferences;
+DNSServer dnsServer;
 
 String scannedNetworks = "";
 bool scanInProgress = false;
@@ -121,145 +123,120 @@ void setupOTA() {
 
   server.on("/", HTTP_GET, []() {
     updateScanResults();
-    server.send(200, "text/html", R"rawliteral(
+    String ip = WiFi.localIP().toString();
+    unsigned long uptime = millis() / 1000;
+    String uptime_str = String(uptime / 60) + " min " + String(uptime % 60) + " seg";
+
+    String html = R"rawliteral(
       <!DOCTYPE html>
-        <html>
-        <head>
-          <meta name='viewport' content='width=device-width, initial-scale=1.0'>
-          <title>BIT40 Config</title>
-          <style>
-                body {
-                font-family: Arial;
-                background: #111;
-                color: #eee;
-                text-align: center;
-                padding-top: 50px;
-                margin: 0;
-              }
-
-              h1 {
-                color: #0f0;
-                font-size: 32px;
-              }
-
-              form {
-                margin: 20px auto;
-                padding: 20px;
-                background: #222;
-                width: 90%;
-                max-width: 400px;
-                border-radius: 10px;
-                box-shadow: 0 0 10px #0f0;
-              }
-
-              input, select {
-                width: 100%;
-                padding: 12px;
-                margin: 10px 0;
-                background: #000;
-                color: #0f0;
-                border: none;
-                font-size: 16px;
-                box-sizing: border-box;
-              }
-
-              input[type=submit] {
-                background: #0f0;
-                color: black;
-                padding: 12px;
-                border-radius: 5px;
-                font-size: 16px;
-                cursor: pointer;
-                width: 100%;
-              }
-
-              @media (max-width: 600px) {
-                h1 {
-                  font-size: 6vw;
-                }
-                input, select, input[type=submit] {
-                  font-size: 4vw;
-                }
-              }
-
-          </style>
-        </head>
-        <body>
-          <h1>BIT40 Config</h1>
-          <form action='/update' method='POST' enctype='multipart/form-data'>
-            <input type='file' name='update'><br>
-            <input type='submit' value='Actualizar firmware'>
-          </form>
-          <form action='/wifi' method='POST'>
-            <select name='ssid'>
-    )rawliteral" + scannedNetworks + R"rawliteral(
-                </select><br>
-          <input type='password' name='pass' placeholder='Contraseña'><br>
-          <input type='submit' value='Guardar WiFi'>
-        </form>
-        <form action='/resetwifi' method='POST'>
-          <input type='submit' value='Borrar configuración WiFi'>
-        </form>
-        <form id="gifForm">
-          <select name='gif' id="gifSelect">
-            <option value='0'>Guino</option>
-            <option value='1'>Estrella</option>
-            <option value='2'>Normal</option>
-            <option value='3'>Inicio</option>
-            <option value='4'>Mareado</option>
-            <option value='5'>Corazones</option>
-            <option value='6'>Movimiento1</option>
-            <option value='7'>Muerto</option>
-            <option value='8'>Baba</option>
-          </select>
-          <input type='submit' value='Mostrar GIF'>
-        </form>
-        <div class="info-box">
-          <h2>Información del dispositivo</h2>
-          <p><strong>Versión firmware:</strong> 1.0.0</p>
-          <p><strong>IP actual:</strong> %IP%</p>
-          <p><strong>Uptime:</strong> %UPTIME%</p>
-        </div>
+      <html>
+      <head>
+        <meta charset='utf-8'>
+        <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+        <title>BIT40 Config</title>
         <style>
-          .info-box {
+          body {
+            font-family: Arial;
+            background: #111;
+            color: #eee;
+            text-align: center;
+            padding-top: 50px;
+            margin: 0;
+          }
+
+          h1 {
+            color: #0f0;
+            font-size: 32px;
+          }
+
+          form {
             margin: 20px auto;
             padding: 20px;
-            background: #333;
-            color: #0f0;
+            background: #222;
             width: 90%;
             max-width: 400px;
             border-radius: 10px;
             box-shadow: 0 0 10px #0f0;
+          }
+
+          input, select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: #000;
+            color: #0f0;
+            border: none;
             font-size: 16px;
+            box-sizing: border-box;
+          }
+
+          input[type=submit] {
+            background: #0f0;
+            color: black;
+            padding: 12px;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            width: 100%;
           }
 
           @media (max-width: 600px) {
-            .info-box {
-              font-size: 14px;
+            h1 {
+              font-size: 6vw;
+            }
+            input, select, input[type=submit] {
+              font-size: 4vw;
             }
           }
         </style>
-
-        <p id="gifResponse" style="color:#0f0;"></p>
-
-        <script>
-          document.getElementById("gifForm").addEventListener("submit", function(e) {
-            e.preventDefault();
-            const selected = document.getElementById("gifSelect").value;
-            fetch("/setgif", {
-              method: "POST",
-              headers: { "Content-Type": "application/x-www-form-urlencoded" },
-              body: "gif=" + encodeURIComponent(selected)
-            })
-            .then(response => response.text())
-            .then(text => {
-              document.getElementById("gifResponse").innerText = text;
-            });
-          });
-        </script>
+      </head>
+      <body>
+        <h1>BIT40 Config</h1>
+        <div class='main-container'>
+          <div class='form-box'>
+            <form action='/update' method='POST' enctype='multipart/form-data'>
+              <input type='file' name='update'><br>
+              <input type='submit' value='Actualizar firmware'>
+            </form>
+            <form action='/wifi' method='POST'>
+              <select name='ssid'>
+    )rawliteral" + scannedNetworks + R"rawliteral(
+              </select><br>
+              <input type='password' name='pass' placeholder='Contraseña'><br>
+              <input type='submit' value='Guardar WiFi'>
+            </form>
+            <form action='/resetwifi' method='POST'>
+              <input type='submit' value='Borrar configuración WiFi'>
+            </form>
+            <form action='/setgif' method='POST'>
+              <select name='gif'>
+                <option value='0'>Guiño</option>
+                <option value='1'>Estrella</option>
+                <option value='2'>Normal</option>
+                <option value='3'>Inicio</option>
+                <option value='4'>Mareado</option>
+                <option value='5'>Corazones</option>
+                <option value='6'>Movimiento1</option>
+                <option value='7'>Muerto</option>
+                <option value='8'>Baba</option>
+              </select>
+              <input type='submit' value='Mostrar GIF'>
+            </form>
+          </div>
+          <div class='main-container'>
+          <div class='info-box'>
+            <h2>Información del dispositivo</h2>
+            <p><strong>Versión firmware:</strong> 1.0.0</p>
+            <p><strong>IP actual:</strong> )rawliteral" + ip + R"rawliteral(</p>
+            <p><strong>Uptime:</strong> )rawliteral" + uptime_str + R"rawliteral(</p>
+          </div>
+          </div>
+        </div>
       </body>
       </html>
-    )rawliteral");
+    )rawliteral";
+
+    server.send(200, "text/html; charset=utf-8", html);
   });
 
   server.on("/wifi", HTTP_POST, []() {
@@ -296,7 +273,7 @@ void setupOTA() {
   }, []() {
     HTTPUpload& upload = server.upload();
     if (upload.status == UPLOAD_FILE_START) {
-      gifManager.setGIF(gifList[MUERTO]);  // Fondo inicial
+      gifManager.setGIF(gifList[7]);  // Fondo inicial
       gifManager.play();
 
       Update.onProgress([](size_t progress, size_t total) {
