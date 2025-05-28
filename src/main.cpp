@@ -48,7 +48,8 @@ enum GifIndex {
   CORAZONES = 5,
   MOVIMIENTO1 = 6,
   ESTRELLA = 1,
-  BABA = 8
+  BABA = 8,
+  MUERTO = 7
 };
 int aleatorio[] = {0, 1, 5, 6, 8};
 
@@ -81,37 +82,60 @@ void setup() {
 }
 
 void loop() {
-  dnsServer.processNextRequest();  // ⚠️ necesario para que funcione el portal cautivo
-  server.handleClient();           // ya lo usas si tienes animaciones
+  if (WiFi.getMode() == WIFI_AP) {
+    dnsServer.processNextRequest();
+  }
+  server.handleClient();           
   handleSelectedGIF();
+
   static unsigned long lastCheck = 0;
-  const unsigned long checkInterval = 300;  // ms
-  const float threshold = 1.2;              // Umbral de sacudida en g
+  const unsigned long checkInterval = 300;
+  const float shakeThreshold = 1.2;
+  const float tiltThreshold = 0.9;
+
+  static int lastGifShown = -1;
+
   if (millis() - lastCheck > checkInterval) {
     lastCheck = millis();
 
-    int16_t ax, ay, az;
-    mpu.getAcceleration(&ax, &ay, &az);
+    int16_t ax_raw, ay_raw, az_raw;
+    mpu.getAcceleration(&ax_raw, &ay_raw, &az_raw);
 
-    float a = sqrt(ax * ax + ay * ay + az * az) / 16384.0;
+    float ax = ax_raw / 16384.0;
+    float ay = ay_raw / 16384.0;
+    float az = az_raw / 16384.0;
+    float a = sqrt(ax * ax + ay * ay + az * az);
 
-    if (a > threshold) {
-      Serial.println("¡Sacudida detectada!");
-      gifManager.setGIF(gifList[MAREADO]);
-      gifManager.play();
-      gifManager.setGIF(gifList[MAREADO]);
-      gifManager.play();
-      gifManager.setGIF(gifList[MAREADO]);
-      gifManager.play();
+    Serial.printf("ax: %.2f, ay: %.2f, az: %.2f, a: %.2f\n", ax, ay, az, a);
+
+    int selected = -1;
+
+    if (ay > tiltThreshold) {
+      Serial.println("Detectado: BOCA ABAJO → MUERTO");
+      selected = MUERTO;
+    } else if (abs(ax) > tiltThreshold) {
+      Serial.println("Detectado: DE LADO → MAREADO");
+      selected = MAREADO;
     } else {
-      num = random(0, 5);  // corregido: solo valores 0 a 4
-      gifManager.setGIF(gifList[NORMAL]);
+      if (a > shakeThreshold) {
+        Serial.println("¡Sacudida detectada!");
+        selected = MAREADO;
+      } else {
+        Serial.println("De pie (normal + aleatorio)");
+        gifManager.setGIF(gifList[NORMAL]);
+        gifManager.play();
+
+        num = random(0, 6);
+        selected = aleatorio[num];
+      }
+    }
+
+    if (selected != -1 && selected != lastGifShown) {
+      gifManager.setGIF(gifList[selected]);
       gifManager.play();
-      gifManager.setGIF(gifList[aleatorio[num]]);
-      gifManager.play();
+      lastGifShown = selected;
     }
   }
 
-  // ✅ Necesario para que funcione la web OTA
   server.handleClient();
 }
