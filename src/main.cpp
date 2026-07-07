@@ -4,6 +4,7 @@
 #include <TFT_eSPI.h>
 #include <AnimatedGIF.h>
 #include "gif_manager.h"
+#include "comm_manager.h"
 
 // GIFs
 #include "gifs/guino.h"
@@ -19,12 +20,13 @@
 // Primero inicializa el TFT
 TFT_eSPI tft = TFT_eSPI();
 int num = 0;
-// Luego incluye el OTA (usa tft)
+// Luego incluye el OTA (usa `tft`)
 #include "ota_web.h"
 
 AnimatedGIF gif;
 GIFManager gifManager(&tft, &gif);
 MPU6050 mpu;
+CommManager commManager;
 // Lista de GIFs
 GIFEntry gifList[] = {
   { guino, sizeof(guino) },         // 0
@@ -79,9 +81,11 @@ void setup() {
   // Muestra animación de inicio
   gifManager.setGIF(gifList[INICIO]);
   gifManager.play();
+  commManager.begin();
 }
 
 void loop() {
+  commManager.loop();
   if (WiFi.getMode() == WIFI_AP) {
     dnsServer.processNextRequest();
   }
@@ -117,7 +121,6 @@ void loop() {
       Serial.println("Detectado: DE LADO → MAREADO");
       selected = MAREADO;
     } else {
-<<<<<<< HEAD
       if (a > shakeThreshold) {
         Serial.println("¡Sacudida detectada!");
         selected = MAREADO;
@@ -133,16 +136,10 @@ void loop() {
 
     if (selected != -1 && selected != lastGifShown) {
       gifManager.setGIF(gifList[selected]);
-=======
-      num = random(0, 5);  // corregido: solo valores 0 a 4
-      gifManager.setGIF(gifList[NORMAL]);
-      gifManager.play();
-      gifManager.setGIF(gifList[aleatorio[num]]);
->>>>>>> 2d9a3456670c14b82181614ff0609a71353d9f62
       gifManager.play();
       lastGifShown = selected;
     }
   }
+
   server.handleClient();
 }
-

@@ -29,7 +29,11 @@ void GIFManager::play() {
 }
 
 void GIFManager::draw(GIFDRAW *pDraw) {
+  const int FRANJA_SUPERIOR = 16; // Altura de la franja superior (ajusta si es necesario)
   if (pDraw->y >= _tft->height()) return;
+
+  // Evita dibujar en la franja superior
+  if ((pDraw->y + pDraw->iY) < FRANJA_SUPERIOR) return;
 
   int width = pDraw->iWidth;
   if (width + pDraw->iX > _tft->width()) width = _tft->width() - pDraw->iX;
@@ -43,9 +47,9 @@ void GIFManager::draw(GIFDRAW *pDraw) {
     _tft->pushPixels(_lineBuffer, width);
   }
 
-  // ✅ Añade esto para que se sobrepinte tras cada línea
-  if (pDraw->y + pDraw->iY <= 10) {
-    drawWiFiStatusIcon();  // Dibuja el icono si la línea afecta a su zona
+  // Si la línea afecta a la franja, repinta iconos (opcional, según tu lógica)
+  if (pDraw->y + pDraw->iY <= FRANJA_SUPERIOR) {
+    drawWiFiStatusIcon();
   }
 }
 
